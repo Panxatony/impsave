@@ -31,6 +31,7 @@ public class Patcher {
 		addMD5("ebe5f3037fba6ea2e3833b480672c47c"); // r54
 		addMD5("1ee3ccd610801161db799382cb0af599"); // r55
 		addMD5("2a30f1ae71214a739067529b4e3964bc"); // Windowed mode
+		addMD5("e552b2d3e2525c4b41b753fa03801747"); // Hang fixes (CD-ROM scan + turn-end loop)
 	}
 
 	// States:
@@ -122,6 +123,42 @@ public class Patcher {
 		patches.addPatch(0x408CE7, "c20800");
 		// TODO: Make Windowed mode optional somehow?
 		// TODO: Center window.
+
+		// Fix two "Application Hang" (AppHangB1) freezes - the game stops
+		// pumping the message queue and Windows terminates it. Neither shows up
+		// as an exception/crash, so they leave no faulting address in the event
+		// log. Both were diagnosed from live hang dumps (32-bit CONTEXT).
+
+		// Fix 1: Before every movie (intro OPEN.AVI, council VOTE.AVI, win/lose)
+		// CMovieMgr scans drives C:-Z: for the original CD by volume label
+		// "IMPERIALISM" (setMgr.cpp, loop at 0x4148BD). On some systems a
+		// GetDriveTypeA()/NtOpenFile() on a drive letter blocks for seconds and
+		// hangs the game. The scan is pointless for the GOG release: the very
+		// next step (GetMoviePath at 0x5DFC10) falls back to the local Movies/
+		// folder anyway. Turn the conditional "skip scan" branch at 0x4148AD
+		// into an unconditional one: je 0x414944 -> nop; jmp 0x414944.
+		patches.addPatch(0x4148ad, "90E9");
+
+		// Fix 2: The turn-end distribution loop at 0x59E6B3-0x59E6F3 (inside the
+		// function at 0x59E4F0) makes no progress when a candidate entry is
+		// skipped by its flags - nothing changes, so the exit condition
+		// ([esi+0x28] < table[type]/2) stays true forever: an infinite busy
+		// loop with no message pump. (The sibling loop right above it, at
+		// 0x59E5E6, was already guarded by the developers with a 200-iteration
+		// counter; this one was not.) Add the same kind of fail-safe counter,
+		// bounded at 1,000,000 iterations, using two stubs placed in the free
+		// tail of the .patch section. The counter lives in a dead global
+		// (0x69B76C, the CD-drive cache of the never-called fn at 0x5DF8D6).
+		// Normal loops run a few hundred times; the limit only ever trips on
+		// the hang and breaks out to the loop's regular exit at 0x59E7C9.
+		//   Pre-header 0x59E6AD: jl 0x59E7C9   -> jmp stub2; nop
+		patches.addPatch(0x59e6ad, "E96E8A160090");
+		//   Back-edge  0x59E6F3: jge loop;jmp exit -> jmp stub1; nop; nop
+		patches.addPatch(0x59e6f3, "E93D8A16009090");
+		//   stub2 @0x707120: jl exit; mov [counter], 1000000; jmp loop
+		patches.addPatch(0x707120, "0F8CA376E9FFC7056CB7690040420F00E97E75E9FF");
+		//   stub1 @0x707135: jl exit; dec [counter]; jle exit; jmp loop
+		patches.addPatch(0x707135, "0F8C8E76E9FFFF0D6CB769000F8E8276E9FFE96775E9FF");
 
 		return patches;
 	}
