@@ -42,6 +42,13 @@ public class Context {
 		if (location.endsWith(".app/Contents/Resources/Java")) {
 			location = new File(location).getParentFile().getParentFile().getParentFile().getParent();
 		}
+		// jpackage app-image on Windows: the JAR lives in <game>/ImpSave/app/ next to
+		// <game>/ImpSave/runtime/, so the game folder is two levels up.
+		File dir = new File(location);
+		if (dir.getName().equals("app") && dir.getParentFile() != null
+				&& new File(dir.getParentFile(), "runtime").isDirectory()) {
+			location = dir.getParentFile().getParent();
+		}
 		try { // decode %20's and such back into spaces
 			location = URLDecoder.decode(location, "UTF-8");
 		} catch (UnsupportedEncodingException e) { }
