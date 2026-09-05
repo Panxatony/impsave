@@ -22,7 +22,10 @@ public class PatchSet {
 
 	private static String calcJmpOrCall(int instrAddr, int destAddr) {
 		int x = destAddr - instrAddr - 5;
-		return String.format("%x", Utils.byteSwapInt(x));
+		// %08x, not %x: a displacement whose low byte is 0x00 would otherwise
+		// lose its leading zeros after the byte swap and yield a short (odd-length)
+		// hex string, i.e. a corrupted jump.
+		return String.format("%08x", Utils.byteSwapInt(x));
 	}
 
 	private static String jmpInstr(int instrAddr, int destAddr) {
