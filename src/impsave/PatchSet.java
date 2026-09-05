@@ -1,19 +1,33 @@
 package impsave;
 
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Map;
 
 public class PatchSet {
+	/**
+	 * Virtual address minus file offset for the .text section of the GOG
+	 * Imperialism.exe (VA 0x401000 at file offset 0x400). Only valid for
+	 * .text; patches must stay inside that section.
+	 */
+	static final int ADDRESS_TO_OFFSET = 0x400C00;
+
 	private HashMap<Integer, String> patches;
 
 	public PatchSet() {
 		patches = new HashMap<Integer, String>();
 	}
 
+	/** Read-only view of the patch table (address -> hex bytes), for tests. */
+	Map<Integer, String> entries() {
+		return Collections.unmodifiableMap(patches);
+	}
+
 	public void apply(byte[] data) {
 		System.out.println("Patching file of size " + data.length);
 		for (int addr : patches.keySet()) {
 			byte[] patchData = Utils.hexToBytes(patches.get(addr));
-			int convertedAddr = addr - 0x400C00;
+			int convertedAddr = addr - ADDRESS_TO_OFFSET;
 			for (int i = 0; i < patchData.length; i++) {
 				data[convertedAddr + i] = patchData[i];
 			}
@@ -28,7 +42,7 @@ public class PatchSet {
 		return String.format("%08x", Utils.byteSwapInt(x));
 	}
 
-	private static String jmpInstr(int instrAddr, int destAddr) {
+	static String jmpInstr(int instrAddr, int destAddr) {
 		// e8 for call
 		return "e9" + calcJmpOrCall(instrAddr, destAddr);
 	}
