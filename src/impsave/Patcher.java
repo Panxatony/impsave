@@ -31,7 +31,7 @@ public class Patcher {
 		addMD5("ebe5f3037fba6ea2e3833b480672c47c"); // r54
 		addMD5("1ee3ccd610801161db799382cb0af599"); // r55
 		addMD5("2a30f1ae71214a739067529b4e3964bc"); // Windowed mode
-		addMD5("e552b2d3e2525c4b41b753fa03801747"); // Hang fixes (CD-ROM scan + turn-end loop)
+		addMD5("7ceebaafae07e8713c010dcbd01b4d1e"); // Hang fixes (CD-ROM scan + turn-end loop)
 	}
 
 	// States:
@@ -146,19 +146,21 @@ public class Patcher {
 		// loop with no message pump. (The sibling loop right above it, at
 		// 0x59E5E6, was already guarded by the developers with a 200-iteration
 		// counter; this one was not.) Add the same kind of fail-safe counter,
-		// bounded at 1,000,000 iterations, using two stubs placed in the free
-		// tail of the .patch section. The counter lives in a dead global
-		// (0x69B76C, the CD-drive cache of the never-called fn at 0x5DF8D6).
-		// Normal loops run a few hundred times; the limit only ever trips on
-		// the hang and breaks out to the loop's regular exit at 0x59E7C9.
-		//   Pre-header 0x59E6AD: jl 0x59E7C9   -> jmp stub2; nop
-		patches.addPatch(0x59e6ad, "E96E8A160090");
-		//   Back-edge  0x59E6F3: jge loop;jmp exit -> jmp stub1; nop; nop
-		patches.addPatch(0x59e6f3, "E93D8A16009090");
-		//   stub2 @0x707120: jl exit; mov [counter], 1000000; jmp loop
-		patches.addPatch(0x707120, "0F8CA376E9FFC7056CB7690040420F00E97E75E9FF");
-		//   stub1 @0x707135: jl exit; dec [counter]; jle exit; jmp loop
-		patches.addPatch(0x707135, "0F8C8E76E9FFFF0D6CB769000F8E8276E9FFE96775E9FF");
+		// bounded at 1,000,000 iterations, using two stubs placed in the .text
+		// code cave freed above by un-inlining AttachMemory (int3 padding at
+		// 0x47C1A0, reached correctly by PatchSet's 0x400C00 mapping). The
+		// counter lives in a dead global (0x69B76C, the CD-drive cache of the
+		// never-called fn at 0x5DF8D6). Normal loops run a few hundred times;
+		// the limit only ever trips on the hang and breaks out to the loop's
+		// regular exit at 0x59E7C9.
+		//   Pre-header 0x59E6AD (jl 0x59E7C9) -> jmp stub2, and stub2 does:
+		//     jl 0x59E7C9 ; mov [0x69B76C], 1000000 ; jmp back to loop 0x59E6B3
+		patches.addJmpBackPatch(0x59e6ad, 0x47c1a0, 0x59e6b3,
+			"0F8C23261200C7056CB7690040420F00");
+		//   Back-edge 0x59E6F3 (jge loop; jmp exit) -> jmp stub1, and stub1 does:
+		//     jl 0x59E7C9 ; dec [0x69B76C] ; jle 0x59E7C9 ; jmp back to loop
+		patches.addJmpBackPatch(0x59e6f3, 0x47c1b5, 0x59e6b3,
+			"0F8C0E261200FF0D6CB769000F8E02261200");
 
 		return patches;
 	}
