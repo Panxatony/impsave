@@ -80,6 +80,8 @@ class PatchTableTest {
 		assertEquals("e900000000", PatchSet.jmpInstr(0x1000, 0x1005));
 		assertEquals("e9fbffffff", PatchSet.jmpInstr(0x1005, 0x1005));
 		assertEquals("e9d95e1d00", PatchSet.jmpInstr(0x4099b2, 0x5df890));
+		// Low displacement byte 0x00 - the case that used to lose its leading zeros.
+		assertEquals("e900010000", PatchSet.jmpInstr(0x1000, 0x1105));
 	}
 
 	@Test
