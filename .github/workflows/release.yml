@@ -1,0 +1,105 @@
+name: Release
+
+# Triggered by pushing a tag such as v0.25. The tag must match <version> in pom.xml.
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  jar:
+    name: Portable JAR
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+
+      - name: Check that the tag matches pom.xml
+        id: version
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          POM_VERSION="$(mvn -q --no-transfer-progress help:evaluate -Dexpression=project.version -DforceStdout)"
+          if [ "$TAG_VERSION" != "$POM_VERSION" ]; then
+            echo "Tag version ($TAG_VERSION) does not match pom.xml version ($POM_VERSION)" >&2
+            exit 1
+          fi
+          echo "version=$POM_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Build and run tests
+        run: mvn -B --no-transfer-progress package
+
+      - name: Collect JAR
+        run: |
+          mkdir -p dist
+          cp target/impsave-*.jar "dist/ImpSave-${{ steps.version.outputs.version }}.jar"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: jar
+          path: dist/*.jar
+          if-no-files-found: error
+
+  windows-bundle:
+    name: Windows bundle with embedded runtime
+    runs-on: windows-latest
+    needs: jar
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+
+      - name: Build
+        run: mvn -B --no-transfer-progress -DskipTests package
+
+      - name: jpackage (app-image with bundled runtime)
+        shell: pwsh
+        run: |
+          $version = "${{ needs.jar.outputs.version }}"
+          $jar = Get-ChildItem target -Filter 'impsave-*.jar' | Select-Object -First 1
+          New-Item -ItemType Directory -Force pkg-input | Out-Null
+          Copy-Item $jar.FullName "pkg-input/ImpSave-$version.jar"
+          jpackage --type app-image --name ImpSave --app-version $version `
+            --input pkg-input --main-jar "ImpSave-$version.jar" --main-class impsave.Main `
+            --description "Companion program for the Imperialism game" --dest dist
+          Compress-Archive -Path dist/ImpSave -DestinationPath "dist/ImpSave-$version-windows-x64.zip"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-bundle
+          path: dist/*.zip
+          if-no-files-found: error
+
+  release:
+    name: Publish GitHub Release
+    runs-on: ubuntu-latest
+    needs: [jar, windows-bundle]
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: assets
+          merge-multiple: true
+
+      - name: Checksums
+        run: |
+          cd assets
+          sha256sum * > SHA256SUMS
+          cat SHA256SUMS
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          name: ImpSave ${{ needs.jar.outputs.version }}
+          generate_release_notes: true
+          files: assets/*

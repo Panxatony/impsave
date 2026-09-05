@@ -4,7 +4,7 @@ import java.io.*;
 import java.util.HashSet;
 
 public class Patcher {
-	private static final int EXPECTED_SIZE = 3133440;
+	static final int EXPECTED_SIZE = 3133440;
 
 	private static String LATEST_MD5;
 	private static HashSet<String> OLD_MD5S = new HashSet<String>();
@@ -32,6 +32,16 @@ public class Patcher {
 		addMD5("1ee3ccd610801161db799382cb0af599"); // r55
 		addMD5("2a30f1ae71214a739067529b4e3964bc"); // Windowed mode
 		addMD5("7ceebaafae07e8713c010dcbd01b4d1e"); // Hang fixes (CD-ROM scan + turn-end loop)
+	}
+
+	/** Number of registered binary versions (base + patched), for tests. */
+	static int knownVersionCount() {
+		return OLD_MD5S.size() + 1;
+	}
+
+	/** MD5 of the binary produced by the current patch table, for tests. */
+	static String latestMd5() {
+		return LATEST_MD5;
 	}
 
 	// States:
@@ -68,7 +78,7 @@ public class Patcher {
 		}
 	}
 
-	private static PatchSet getPatches() {
+	static PatchSet getPatches() {
 		PatchSet patches = new PatchSet();
 
 		// Uninline call to CDib::AttachMemory() from CDib::AttachResource(),

@@ -6,14 +6,16 @@
 	<name>ImpSave</name>
 	<description>Companion program for Imperialism game, supporting autosaving and patches to fix crash bugs.</description>
 	<properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.build.timestamp.format>yyyyMMdd.HHmmss</maven.build.timestamp.format>
-    	<maven.compiler.target>1.7</maven.compiler.target>
-    	<maven.compiler.source>1.7</maven.compiler.source>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<maven.build.timestamp.format>yyyyMMdd.HHmmss</maven.build.timestamp.format>
+		<!-- Bytecode level. A JAR built for release N runs on every Java N or newer;
+		     build with a current JDK (21 recommended). -->
+		<maven.compiler.release>17</maven.compiler.release>
 	</properties>
 	<build>
-	  <finalName>${project.artifactId}-${project.version}-${maven.build.timestamp}</finalName>
+		<finalName>${project.artifactId}-${project.version}-${maven.build.timestamp}</finalName>
 		<sourceDirectory>src</sourceDirectory>
+		<testSourceDirectory>test</testSourceDirectory>
 		<resources>
 			<resource>
 				<directory>src</directory>
@@ -25,11 +27,15 @@
 		<plugins>
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.8.1</version>
+				<version>3.13.0</version>
+			</plugin>
+			<plugin>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>3.2.5</version>
 			</plugin>
 			<plugin>
 				<artifactId>maven-jar-plugin</artifactId>
-				<version>3.2.0</version>
+				<version>3.4.1</version>
 				<configuration>
 					<archive>
 						<manifest>
@@ -41,5 +47,12 @@
 			</plugin>
 		</plugins>
 	</build>
-	<dependencies></dependencies>
+	<dependencies>
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter</artifactId>
+			<version>5.10.2</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
 </project>

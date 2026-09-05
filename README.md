@@ -1,5 +1,7 @@
 # ImpSave v0.24
 
+[![CI](https://github.com/Panxatony/impsave/actions/workflows/ci.yml/badge.svg)](https://github.com/Panxatony/impsave/actions/workflows/ci.yml)
+
 ImpSave is a helpful companion for the [Imperialism PC game](https://en.wikipedia.org/wiki/Imperialism_%28video_game%29).
 
 It has two primary functions:
@@ -18,12 +20,18 @@ saved game and annotate saves with additional comments.
 
 ## Installing a release (JAR)
 
-1. **Install Java.** ImpSave is a Java desktop application; any Java Runtime
-   (JRE) version 8 or newer works. Check with `java -version` in a command
-   prompt. If the command is unknown, install a JRE, e.g. from
-   [Adoptium](https://adoptium.net/).
-2. **Download the JAR** (`ImpSave-<version>.jar`) from the
-   [Releases page](https://github.com/asvitkine/impsave/releases).
+1. **Install Java** - or skip this step by using the Windows bundle (see 2).
+   ImpSave is a Java desktop application; any Java Runtime (JRE) version 17
+   or newer works. Check with `java -version` in a command prompt. If the
+   command is unknown, install a JRE, e.g. from [Adoptium](https://adoptium.net/).
+2. **Download a release** from the
+   [Releases page](https://github.com/Panxatony/impsave/releases). Two
+   variants are published:
+   - `ImpSave-<version>.jar` - the portable JAR; needs Java 17 or newer.
+   - `ImpSave-<version>-windows-x64.zip` - a Windows build with an embedded
+     Java runtime; no Java installation needed. Unzip it so that the
+     `ImpSave` folder it contains sits inside the game folder, then run
+     `ImpSave\ImpSave.exe`.
 3. **Put the JAR into the Imperialism game folder** - the same folder that
    contains `Imperialism.exe` and the `Save` sub-folder (for the GOG release
    typically `C:\Program Files (x86)\GOG Galaxy\Games\Imperialism` or
@@ -48,10 +56,11 @@ saved game and annotate saves with additional comments.
    `7ceebaafae07e8713c010dcbd01b4d1e`.
 6. **Keep ImpSave running while you play** so it can back up every save.
 
-To build the JAR yourself, run `mvn package`; the result is
-`target/ImpSave-<version>.jar`. The project targets Java 1.7 bytecode, which
-recent JDKs no longer accept, so with JDK 9 or newer add
-`-Dmaven.compiler.source=8 -Dmaven.compiler.target=8`.
+To build it yourself you need JDK 17 or newer (21 recommended): `mvn package`
+compiles the JAR into `target/` and runs the patch-table sanity tests (they
+verify, without the game binary, that every patch lands inside `.text` and the
+file). The *Release* workflow builds the same JAR plus the Windows bundle (via
+`jpackage`) whenever a tag `v<version>` that matches `pom.xml` is pushed.
 
 ## Save game backups
 
