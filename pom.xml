@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>impsave</groupId>
 	<artifactId>impsave</artifactId>
-	<version>0.24</version>
+	<version>0.25</version>
 	<name>ImpSave</name>
 	<description>Companion program for Imperialism game, supporting autosaving and patches to fix crash bugs.</description>
 	<properties>
