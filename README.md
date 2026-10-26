@@ -1,4 +1,4 @@
-# ImpSave v0.26
+# ImpSave v0.27
 
 [![CI](https://github.com/Panxatony/impsave/actions/workflows/ci.yml/badge.svg)](https://github.com/Panxatony/impsave/actions/workflows/ci.yml)
 [![Latest release](https://img.shields.io/github/v/release/Panxatony/impsave)](https://github.com/Panxatony/impsave/releases/latest)
@@ -11,7 +11,7 @@ It has two primary functions:
   1. Automatically backing up saved games, allowing to restore to an earlier turn.
   2. Patching the Imperialism.exe binary (GOG version) to fix a few crash bugs.
 
-To use it, simply place the ImpSave-0.26.jar inside your Imperialism folder and run it
+To use it, simply place the ImpSave-0.27.jar inside your Imperialism folder and run it
 (you'll need Java 17 or newer), or use the Windows bundle, which needs no Java at all.
 See *Installing a release* below.
 
@@ -45,7 +45,7 @@ saved game and annotate saves with additional comments.
    folder and run
 
    ```
-   java -jar ImpSave-0.26.jar
+   java -jar ImpSave-0.27.jar
    ```
 
    ImpSave needs write access to the game folder (for backups and for
