@@ -131,7 +131,23 @@ public class XmlSerializer {
 
 	private static Node createStringNode(Document doc, String tag, String value) {
 		Element node = doc.createElement(tag);
-		node.appendChild(doc.createTextNode(value));
+		node.appendChild(doc.createTextNode(xmlSafe(value)));
 		return node;
+	}
+
+	/** Removes characters that XML 1.0 cannot represent, so one bad value can't block saving the database. */
+	static String xmlSafe(String value) {
+		if (value == null) {
+			return "";
+		}
+		StringBuilder sb = new StringBuilder(value.length());
+		for (int i = 0; i < value.length(); i++) {
+			char c = value.charAt(i);
+			if (c == 0x9 || c == 0xA || c == 0xD || (c >= 0x20 && c <= 0xD7FF) || (c >= 0xE000 && c <= 0xFFFD)
+					|| Character.isSurrogate(c)) {
+				sb.append(c);
+			}
+		}
+		return sb.toString();
 	}
 }

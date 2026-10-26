@@ -8,7 +8,10 @@ import crockford.CrockfordBase32;
 public class SaveParser {
 	public static final int MAX_OFFSET = 0x2000;
 	public static final int SAVE_NAME_OFFSET = 0xC;
-	public static final int SAVE_NAME_LENGTH = 28;
+	// The name field spans 0x0C-0x2B; game data starts at 0x2C. The game fills
+	// all 32 bytes without a terminating NUL when the name is that long, e.g.
+	// the German autosave label " - Automatische Dateisicherung -".
+	public static final int SAVE_NAME_LENGTH = 32;
 
 	private byte[] data;
 
@@ -17,11 +20,11 @@ public class SaveParser {
 	}
 
 	public String getCountryName() {
-		return readCString(0x1980);
+		return readCString(0x1980, 0x19a4 - 0x1980);
 	}
 
 	public String getSavedGameName() {
-		return readCString(SAVE_NAME_OFFSET);
+		return readCString(SAVE_NAME_OFFSET, SAVE_NAME_LENGTH);
 	}
 
 	public int getTurnNumber() {
@@ -67,12 +70,25 @@ public class SaveParser {
 		return md.digest();
 	}
 
-	private String readCString(int start) {
+	private String readCString(int start, int maxLength) {
+		int limit = Math.min(data.length, start + maxLength);
 		int end = start;
-		while (end < data.length && data[end] != 0) {
+		while (end < limit && data[end] != 0) {
 			end++;
 		}
-		return new String(data, start, end - start);
+		return printable(new String(data, start, end - start, java.nio.charset.StandardCharsets.ISO_8859_1));
+	}
+
+	/** Drops control characters, which are not allowed in the XML database. */
+	static String printable(String s) {
+		StringBuilder sb = new StringBuilder(s.length());
+		for (int i = 0; i < s.length(); i++) {
+			char c = s.charAt(i);
+			if (c >= 0x20 && c != 0x7F && !(c >= 0x80 && c < 0xA0)) {
+				sb.append(c);
+			}
+		}
+		return sb.toString();
 	}
 
 	private String readPascalString(int start) {

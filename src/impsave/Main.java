@@ -6,7 +6,7 @@ import java.io.IOException;
 import javax.swing.SwingUtilities;
 
 public class Main implements Runnable {
-	private static final String VERSION = "0.26";
+	private static final String VERSION = "0.27";
 
 	@Override
 	public void run() {

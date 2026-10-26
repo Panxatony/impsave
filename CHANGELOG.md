@@ -3,6 +3,17 @@
 All notable changes to ImpSave are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.27] - 2026-10-26
+
+### Fixed
+- Saves whose name fills the whole 32-byte name field, such as the German
+  autosave label " - Automatische Dateisicherung -" in `slotA.imp`, were read
+  past the field into the map data. The garbage name contained control
+  characters, so writing `imp_save_db.xml` failed with "An invalid XML
+  character (Unicode: 0x17)" and no backup metadata was stored. Names are now
+  read only within their field (0x0C-0x2B), control characters are dropped,
+  and the XML writer removes any character XML cannot represent.
+
 ## [0.26] - 2026-10-26
 
 ### Fixed
@@ -64,6 +75,7 @@ Last upstream release by asvitkine; see
 <https://github.com/asvitkine/impsave/releases/tag/v0.24>. Earlier history is
 not tracked in this file.
 
+[0.27]: https://github.com/Panxatony/impsave/releases/tag/v0.27
 [0.26]: https://github.com/Panxatony/impsave/releases/tag/v0.26
 [0.25]: https://github.com/Panxatony/impsave/releases/tag/v0.25
 [0.24]: https://github.com/asvitkine/impsave/releases/tag/v0.24
