@@ -3,6 +3,22 @@
 All notable changes to ImpSave are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.26] - 2026-10-26
+
+### Fixed
+- The Windows bundle (`ImpSave.exe`) did not find the game when the game
+  folder path contains spaces, e.g. `C:\Program Files (x86)\GOG Galaxy\Games\Imperialism`.
+  It reported "Imperialism not found!" and "Can't find 'Save' folder" because
+  the bundle layout was checked on the still URL-encoded path (`GOG%20Galaxy`).
+  The JAR location is now decoded via its URI before any check. Regression
+  tests cover bundle paths with spaces.
+- The window title showed `v0.25-dev` instead of the release version.
+
+### Changed
+- A missing `Save` folder is created automatically when `Imperialism.exe` is
+  found (a fresh GOG installation has none until the first save). The error
+  message now shows the folder ImpSave looked in.
+
 ## [0.25] - 2026-09-05
 
 ### Added
@@ -48,5 +64,6 @@ Last upstream release by asvitkine; see
 <https://github.com/asvitkine/impsave/releases/tag/v0.24>. Earlier history is
 not tracked in this file.
 
+[0.26]: https://github.com/Panxatony/impsave/releases/tag/v0.26
 [0.25]: https://github.com/Panxatony/impsave/releases/tag/v0.25
 [0.24]: https://github.com/asvitkine/impsave/releases/tag/v0.24

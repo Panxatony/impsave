@@ -6,7 +6,7 @@ import java.io.IOException;
 import javax.swing.SwingUtilities;
 
 public class Main implements Runnable {
-	private static final String VERSION = "0.25-dev";
+	private static final String VERSION = "0.26";
 
 	@Override
 	public void run() {
@@ -16,8 +16,15 @@ public class Main implements Runnable {
 		File folder = context.getSaveDirectory();
 		MainPanel c = new MainPanel(appName, footer, folder, context.getImperialismApp());
 		c.setVisible(true);
-		if (!folder.exists() || !folder.isDirectory()) {
-			System.out.println("ERROR: Can't find 'Save' folder.");
+		if (!folder.isDirectory() && context.getImperialismApp().isFile()) {
+			// A fresh GOG installation has no Save folder until the first save.
+			if (folder.mkdir()) {
+				System.out.println("Created 'Save' folder: " + folder.getAbsolutePath());
+			}
+		}
+		if (!folder.isDirectory()) {
+			System.out.println("ERROR: Can't find 'Save' folder: " + folder.getAbsolutePath());
+			System.out.println("ImpSave must be placed inside the Imperialism game folder.");
 			return;
 		}
 		FolderMonitor monitor = new FolderMonitor(c.getSaveDb(), folder, ".imp", new Sleeper(250));
